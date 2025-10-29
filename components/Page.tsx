@@ -1,14 +1,20 @@
 import React from 'react';
-import { Text, TextInput, TouchableHighlight, View } from 'react-native';
+import { Text, TouchableHighlight, View } from 'react-native';
+import { TextInput } from '@react-native-material/core';
 import ListIcon from 'assets/list.svg'
 import { cssInterop } from "nativewind";
+import colors from "../colors"
+
 export const Page = () => {
 
-  cssInterop(ListIcon, {
-    className: {
-      target: "style",
-    }
-  });
+  [ListIcon, TextInput].forEach(c => {
+    cssInterop(c, {
+      className: {
+        target: "style",
+      }
+    });
+  })
+  
 
   return (
 
@@ -18,9 +24,21 @@ export const Page = () => {
         <View className='h-60 bg-green-500'>
 
         </View>
+        <Text className="text-primary">testing</Text>
         <View className='flex flex-row gap-10 h-20'>
-          <Text className="text-primary">Bsrdsdfsdddfudh</Text>
-          <TextInput className='bg-yellow-500 grow'/>
+          <TextInput
+            cursorColor={colors.text}
+            label="Add"
+            className="grow"
+            inputContainerStyle={{
+              backgroundColor: colors.surface,
+              height: "100%",
+            }}
+            inputStyle={{
+              color: colors.text
+            }}
+            color={colors.text}
+            />
           <TouchableHighlight>
             <View className='w-20 h-20 bg-primary rounded-full items-center justify-center'>
               <ListIcon className='color-on-primary'/>
