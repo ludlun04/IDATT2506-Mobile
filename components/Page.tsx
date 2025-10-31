@@ -55,7 +55,9 @@ export const Page = () => {
       { id: 7, title: "Salatmix", state: false },
       { id: 8, title: "Tomatsaus", state: true },
       { id: 9, title: "Knekkebrød – Wasa", state: false },
-      { id: 10, title: "Yoghurt naturell", state: false }
+      { id: 10, title: "Yoghurt naturell", state: false },
+      { id: 11, title: "Yoghurt unaturell", state: false },
+      { id: 12, title: "Yoghurt tjanaturell", state: false }
     ]
   },
   {
@@ -207,7 +209,7 @@ export const Page = () => {
         </View>
         
 
-        <View className='grow bg-surface rounded-md'>
+        <View className='flex-1 bg-surface rounded-md'>
           <ScrollView>
             {currentList.entries.map((entry, index) => (
               <TouchableRipple
