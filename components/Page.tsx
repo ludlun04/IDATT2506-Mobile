@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, TextInputSubmitEditingEvent, Text, TouchableHighlight, View } from 'react-native';
+import { Pressable, ScrollView, TextInputSubmitEditingEvent, Text, TouchableHighlight, View, Keyboard } from 'react-native';
 import { TextInput as PaperTextInput, List, Checkbox, TouchableRipple, Dialog, Button } from 'react-native-paper';
 import ListIcon from 'assets/list.svg'
 import { cssInterop } from "nativewind";
@@ -20,7 +20,7 @@ import colors from "../colors"
   }
   const TextInput = React.memo(({value, setValue, onSubmitEditing}: TextInputProps) => {
     return <PaperTextInput
-            label={"Add"}
+            label={"Add new item"}
             className='grow'
             underlineColor={colors.text}
             activeUnderlineColor={colors.text}
@@ -226,7 +226,11 @@ export const Page = () => {
               }
             }}
             />
-          <TouchableHighlight onPress={() => setDialogVisible(true)}>
+          <TouchableHighlight
+            onPress={() => {
+              Keyboard.dismiss()
+              setDialogVisible(true)
+            }}>
             <View className='w-20 h-20 bg-primary rounded-full items-center justify-center'>
               <ListIcon className='color-on-primary'/>
             </View>
