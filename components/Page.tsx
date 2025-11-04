@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInputSubmitEditingEvent, TouchableHighlight, View } from 'react-native';
-import { TextInput as PaperTextInput, List, Checkbox, TouchableRipple } from 'react-native-paper';
+import { Pressable, ScrollView, TextInputSubmitEditingEvent, Text, TouchableHighlight, View } from 'react-native';
+import { TextInput as PaperTextInput, List, Checkbox, TouchableRipple, Dialog, Button } from 'react-native-paper';
 import ListIcon from 'assets/list.svg'
 import { cssInterop } from "nativewind";
 import colors from "../colors"
@@ -182,10 +182,13 @@ import colors from "../colors"
 export const Page = () => {
 
   const [currentList, setCurrentList] = useState<TodoList | undefined>(undefined);
-  const [addText, setAddText] = useState<string>("")
+  const [addListEntryText, setAddListEntryText] = useState<string>("")
+  const [addListText, setAddListText] = useState<string>("")
+  const [dialogVisible, setDialogVisible] = useState<boolean>(false)
 
   return (
 
+    <>
       <View className="h-full flex flex-col gap-10 p-10 overflow-">
         <View className='h-60 bg-surface rounded-md'>
           <ScrollView>
@@ -205,8 +208,8 @@ export const Page = () => {
         </View>
         <View className='flex flex-row gap-10 h-20 rounded-md'>
           <TextInput
-            value={addText}
-            setValue={setAddText} 
+            value={addListEntryText}
+            setValue={setAddListEntryText} 
             onSubmitEditing={() => {
               if (currentList) {
                 const entries = currentList.entries
@@ -214,16 +217,16 @@ export const Page = () => {
                 currentList.entries.push({
                   id: nextId,
                   state: false,
-                  title: addText
+                  title: addListEntryText
                 })
                 lists = lists.filter(l => l.id !== currentList.id)
                 lists.push(currentList)
                 setCurrentList(currentList)
-                setAddText("")
+                setAddListEntryText("")
               }
             }}
             />
-          <TouchableHighlight>
+          <TouchableHighlight onPress={() => setDialogVisible(true)}>
             <View className='w-20 h-20 bg-primary rounded-full items-center justify-center'>
               <ListIcon className='color-on-primary'/>
             </View>
@@ -238,7 +241,7 @@ export const Page = () => {
               .sort((a, b) => Number(a.state) - Number(b.state))
               .map((entry, index) => (
               <TouchableRipple
-              className='rounded-md'
+                className='rounded-md'
                 key={index}
                 rippleColor={colors['primary-transparent']}
                 borderless={true}
@@ -267,6 +270,33 @@ export const Page = () => {
           </ScrollView>
         </View>
       </View>
+      <Dialog
+        visible={dialogVisible}
+        onDismiss={() => setDialogVisible(false)}
+        style={{
+          backgroundColor: colors.background,
+        }}
+        >
+        <Dialog.Title>
+          <Text className='text-text'>Add new list</Text>
+        </Dialog.Title>
+        <Dialog.Content className='text-text'>
+          <TextInput
+            value={addListText}
+            setValue={setAddListText}
+            onSubmitEditing={() => {
+              const nextId = Math.max(...lists.map(l => l.id)) + 1
+              lists.push({
+                title: addListText,
+                id: nextId,
+                entries: []
+              })
+              setDialogVisible(false)
+              setAddListText("")
+            }}/>
+        </Dialog.Content>
+      </Dialog>
+    </>
     
   );
 };
