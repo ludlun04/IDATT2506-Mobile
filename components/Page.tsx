@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Pressable, ScrollView, Text, TouchableHighlight, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Pressable, ScrollView, Text, TextInputSubmitEditingEvent, TouchableHighlight, View } from 'react-native';
 import { TextInput as PaperTextInput, List, Checkbox, TouchableRipple } from 'react-native-paper';
 import ListIcon from 'assets/list.svg'
 import { cssInterop } from "nativewind";
@@ -13,7 +13,12 @@ import colors from "../colors"
     });
   })
 
-  const TextInput = React.memo(props => {
+  interface TextInputProps {
+    value: string
+    setValue: React.Dispatch<React.SetStateAction<string>>
+    onSubmitEditing: ((e: TextInputSubmitEditingEvent) => void)
+  }
+  const TextInput = React.memo(({value, setValue, onSubmitEditing}: TextInputProps) => {
     return <PaperTextInput
             label={"Add"}
             className='grow'
@@ -22,12 +27,12 @@ import colors from "../colors"
             textColor={colors.text}
             contentStyle={{backgroundColor: colors.surface, borderTopLeftRadius: 6,  borderTopRightRadius: 6}}
             theme={{roundness: 20}}
+            value={value}
+            onChangeText={setValue}
+            onSubmitEditing={onSubmitEditing}
+            blurOnSubmit={false}
             />
-  }, () => true);
-
-
-
-export const Page = () => {
+  });
 
   interface TodoEntry {
     id: number
@@ -41,7 +46,7 @@ export const Page = () => {
     entries: TodoEntry[]
   }
 
-  const lists = [
+  let lists = [
   {
     id: 1,
     title: "Rema 1000 – Ukeshandel",
@@ -174,22 +179,21 @@ export const Page = () => {
   }
   ];
 
+export const Page = () => {
 
-  const [currentList, setCurrentList] = useState<TodoList>(lists[0] ?? []);
-
-
-
-
-
+  const [currentList, setCurrentList] = useState<TodoList | undefined>(undefined);
+  const [addText, setAddText] = useState<string>("")
 
   return (
 
       <View className="h-full flex flex-col gap-10 p-10 overflow-">
         <View className='h-60 bg-surface rounded-md'>
           <ScrollView>
-            {lists.map((list, index) => (
+            {lists
+              .sort((a, b) => a.title.localeCompare(b.title))
+              .map((list, index) => (
               <List.Item
-              className={`rounded-md ${list.id === currentList.id ? 'bg-on-primary-transparent' : ''}`}
+              className={`rounded-md ${list.id === currentList?.id ? 'bg-on-primary-transparent' : ''}`}
                 title={<Text className='text-text rounded-full h-20'>{list.title}</Text>}
                 key={index}
                 onPress={() => setCurrentList(list)}
@@ -200,7 +204,25 @@ export const Page = () => {
           </ScrollView>
         </View>
         <View className='flex flex-row gap-10 h-20 rounded-md'>
-          <TextInput/>
+          <TextInput
+            value={addText}
+            setValue={setAddText} 
+            onSubmitEditing={() => {
+              if (currentList) {
+                const entries = currentList.entries
+                const nextId = Math.max(...entries.map(e => e.id)) + 1
+                currentList.entries.push({
+                  id: nextId,
+                  state: false,
+                  title: addText
+                })
+                lists = lists.filter(l => l.id !== currentList.id)
+                lists.push(currentList)
+                setCurrentList(currentList)
+                setAddText("")
+              }
+            }}
+            />
           <TouchableHighlight>
             <View className='w-20 h-20 bg-primary rounded-full items-center justify-center'>
               <ListIcon className='color-on-primary'/>
@@ -211,7 +233,10 @@ export const Page = () => {
 
         <View className='flex-1 bg-surface rounded-md'>
           <ScrollView>
-            {currentList.entries.map((entry, index) => (
+            {currentList?.entries
+              .sort((a, b) => a.title.localeCompare(b.title))
+              .sort((a, b) => Number(a.state) - Number(b.state))
+              .map((entry, index) => (
               <TouchableRipple
               className='rounded-md'
                 key={index}
@@ -224,6 +249,7 @@ export const Page = () => {
                   if (newEntry) newEntry.state = !entry.state
                   setCurrentList(newCurrentList)
                 }}
+                onLongPress={() => alert("Long press!")}
                 >
                 <View className='flex flex-row justify-between items-center mr-10'>
                   <List.Item
