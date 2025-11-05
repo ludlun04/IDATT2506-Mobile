@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { ScrollView, Text, TouchableHighlight, View, Keyboard } from 'react-native';
 import { TextInput as PaperTextInput, List, Checkbox, TouchableRipple, Dialog } from 'react-native-paper';
-import { Directory, File, Paths,  } from 'expo-file-system';
 import ListIcon from 'assets/list.svg'
 import { cssInterop } from "nativewind";
 import colors from "../colors"
 import { TodoEntry, TodoList } from '../types';
 import { TextInput } from './TextInput';
+import { readTodoLists, writeTodoList } from 'utils/FileHandler';
 
   [ListIcon, PaperTextInput].forEach(c => {
     cssInterop(c, {
@@ -16,41 +16,14 @@ import { TextInput } from './TextInput';
     });
   })
 
-  const listsDir = new Directory(Paths.cache, "lists")
-  if (!listsDir.exists) listsDir.create()
-
-  const readTodoLists = () => {
-    const newLists: TodoList[] = []
-    try {
-      const listPaths = listsDir.list()
-      for (const path of listPaths) {
-        newLists.push(JSON.parse(new File(path).textSync()))
-      }
-      return newLists
-    } catch(error) {
-      console.error("Error reading list", error)
-    }
-  }
-
-  const writeTodoList = (list :TodoList) => {
-    try {
-      const file = new File(listsDir, list.id + ".json")
-      if (!file.exists) {
-        file.create()
-      }
-      file.write(JSON.stringify(list))
-    } catch (error) {
-      console.error("Error writing list", error)
-    }
-  }
   let lists: TodoList[] = readTodoLists() ?? []
 
 export const Page = () => {
 
-  const [currentList, setCurrentList] = useState<TodoList | undefined>(undefined);
+  const [currentList, setCurrentList] = useState<TodoList | undefined>();
   const [addListEntryText, setAddListEntryText] = useState<string>("")
   const [addListText, setAddListText] = useState<string>("")
-  const [dialogVisible, setDialogVisible] = useState<boolean>(false)
+  const [newListDialogVisible, setNewListDialogVisible] = useState<boolean>(false)
 
   const reloadLists = () => {
     lists = readTodoLists() ?? []
@@ -79,7 +52,7 @@ export const Page = () => {
       id: nextId,
       entries: []
     }
-    setDialogVisible(false)
+    setNewListDialogVisible(false)
     setAddListText("")
     writeTodoList(newList)
     reloadLists()
@@ -127,7 +100,7 @@ export const Page = () => {
           <TouchableHighlight
             onPress={() => {
               Keyboard.dismiss()
-              setDialogVisible(true)
+              setNewListDialogVisible(true)
             }}>
             <View className='w-20 h-20 bg-primary rounded-full items-center justify-center'>
               <ListIcon className='color-on-primary'/>
@@ -139,7 +112,6 @@ export const Page = () => {
         <View className='flex-1 bg-surface rounded-md'>
           <ScrollView>
             {currentList?.entries
-              .sort((a, b) => a.title.localeCompare(b.title))
               .sort((a, b) => Number(a.state) - Number(b.state))
               .map((entry, index) => (
               <TouchableRipple
@@ -148,7 +120,6 @@ export const Page = () => {
                 rippleColor={colors['primary-transparent']}
                 borderless={true}
                 onPress={() => onPressEntry(entry)}
-                onLongPress={() => alert("Long press!")}
                 >
                 <View className='flex flex-row justify-between items-center mr-10'>
                   <List.Item
@@ -167,8 +138,8 @@ export const Page = () => {
         </View>
       </View>
       <Dialog
-        visible={dialogVisible}
-        onDismiss={() => setDialogVisible(false)}
+        visible={newListDialogVisible}
+        onDismiss={() => setNewListDialogVisible(false)}
         style={{
           backgroundColor: colors.background,
         }}
