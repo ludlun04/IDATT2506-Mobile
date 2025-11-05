@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, TextInputSubmitEditingEvent, Text, TouchableHighlight, View, Keyboard } from 'react-native';
-import { TextInput as PaperTextInput, List, Checkbox, TouchableRipple, Dialog, Button } from 'react-native-paper';
+import React, { useState } from 'react';
+import { ScrollView, Text, TouchableHighlight, View, Keyboard } from 'react-native';
+import { TextInput as PaperTextInput, List, Checkbox, TouchableRipple, Dialog } from 'react-native-paper';
 import { Directory, File, Paths,  } from 'expo-file-system';
 import ListIcon from 'assets/list.svg'
 import { cssInterop } from "nativewind";
 import colors from "../colors"
+import { TodoEntry, TodoList } from '../types';
+import { TextInput } from './TextInput';
 
   [ListIcon, PaperTextInput].forEach(c => {
     cssInterop(c, {
@@ -13,40 +15,6 @@ import colors from "../colors"
       }
     });
   })
-
-  interface TextInputProps {
-    value: string
-    setValue: React.Dispatch<React.SetStateAction<string>>
-    onSubmitEditing: ((e: TextInputSubmitEditingEvent) => void)
-  }
-  const TextInput = React.memo(({value, setValue, onSubmitEditing}: TextInputProps) => {
-    return <PaperTextInput
-            label={"Add new item"}
-            className='grow'
-            underlineColor={colors.text}
-            activeUnderlineColor={colors.text}
-            textColor={colors.text}
-            contentStyle={{backgroundColor: colors.surface, borderTopLeftRadius: 6,  borderTopRightRadius: 6}}
-            theme={{roundness: 20}}
-            value={value}
-            onChangeText={setValue}
-            onSubmitEditing={onSubmitEditing}
-            blurOnSubmit={false}
-            />
-  });
-
-  interface TodoEntry {
-    id: number
-    title: string
-    state: boolean
-  }
-
-  interface TodoList {
-    id: number
-    title: string
-    entries: TodoEntry[]
-  }
-
 
   const listsDir = new Directory(Paths.cache, "lists")
   if (!listsDir.exists) listsDir.create()
