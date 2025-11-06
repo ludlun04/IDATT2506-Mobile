@@ -8,5 +8,6 @@ module.exports = {
         'on-surface': "#CAC4D0",
         background: "#0F0D13",
         'selected-surface': "#49454F",
-        
+        destructive: "#FFA79B",
+        'on-destructive': "#561E18"
       }

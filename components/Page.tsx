@@ -6,7 +6,8 @@ import { cssInterop } from "nativewind";
 import colors from "../colors"
 import { TodoEntry, TodoList } from '../types';
 import { TextInput } from './TextInput';
-import { readTodoLists, writeTodoList } from 'utils/FileHandler';
+import { deleteTodoList, readTodoLists, writeTodoList } from 'utils/FileHandler';
+import { DeleteDialog } from './DeleteDialog';
 
   [ListIcon, PaperTextInput].forEach(c => {
     cssInterop(c, {
@@ -21,9 +22,17 @@ import { readTodoLists, writeTodoList } from 'utils/FileHandler';
 export const Page = () => {
 
   const [currentList, setCurrentList] = useState<TodoList | undefined>();
+
   const [addListEntryText, setAddListEntryText] = useState<string>("")
   const [addListText, setAddListText] = useState<string>("")
+  
   const [newListDialogVisible, setNewListDialogVisible] = useState<boolean>(false)
+
+  const [deleteListDialogVisible, setDeleteListDialogVisible] = useState<boolean>(false)
+  const [listToBeDeleted, setListToBeDeleted] = useState<TodoList | undefined>()
+
+  const [deleteEntryDialogVisible, setDeleteEntryDialogVisible] = useState<boolean>(false)
+  const [entryToBeDeleted, setEntryToBeDeleted] = useState<TodoEntry | undefined>()
 
   const reloadLists = () => {
     lists = readTodoLists() ?? []
@@ -71,6 +80,31 @@ export const Page = () => {
     }
   }
 
+  const onLongPressEntry = (entry: TodoEntry) => {
+    setEntryToBeDeleted(entry)
+    setDeleteEntryDialogVisible(true)
+  }
+
+  const onLongPressList = (list: TodoList) => {
+    setListToBeDeleted(list)
+    setDeleteListDialogVisible(true)
+  } 
+
+  const onDeleteList = () => {
+    if (listToBeDeleted) {
+      deleteTodoList(listToBeDeleted)
+      reloadLists()
+    }
+  }
+
+  const onDeleteEntry = () => {
+    if (entryToBeDeleted && currentList) {
+      currentList.entries = currentList.entries.filter(e => e.id !== entryToBeDeleted.id)
+      writeTodoList(currentList)
+      reloadLists()
+    }
+  }
+
   return (
 
     <>
@@ -85,6 +119,7 @@ export const Page = () => {
                 title={<Text className='text-text rounded-full h-20'>{list.title}</Text>}
                 key={index}
                 onPress={() => setCurrentList(list)}
+                onLongPress={() => onLongPressList(list)}
                 borderless={true}
                 rippleColor={colors['primary-transparent']}
               />
@@ -120,6 +155,7 @@ export const Page = () => {
                 rippleColor={colors['primary-transparent']}
                 borderless={true}
                 onPress={() => onPressEntry(entry)}
+                onLongPress={() => onLongPressEntry(entry)}
                 >
                 <View className='flex flex-row justify-between items-center mr-10'>
                   <List.Item
@@ -154,6 +190,22 @@ export const Page = () => {
             onSubmitEditing={onSubmitNewListTextFieldEditing}/>
         </Dialog.Content>
       </Dialog>
+      { listToBeDeleted &&
+        <DeleteDialog
+          item={listToBeDeleted.title}
+          onDelete={onDeleteList}
+          setVisible={setDeleteListDialogVisible}
+          visible={deleteListDialogVisible}
+          />
+      }
+      { entryToBeDeleted &&
+        <DeleteDialog
+          item={entryToBeDeleted.title}
+          onDelete={onDeleteEntry}
+          setVisible={setDeleteEntryDialogVisible}
+          visible={deleteEntryDialogVisible}
+          />
+      }
     </>
     
   );
