@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
-import { ScrollView, Text, TouchableHighlight, View, Keyboard } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ScrollView, Text, TouchableHighlight, View, Keyboard, TouchableOpacity } from 'react-native';
 import { TextInput as PaperTextInput, List, Checkbox, TouchableRipple, Dialog } from 'react-native-paper';
 import ListIcon from 'assets/list.svg'
+import TrashIcon from 'assets/trash.svg'
 import { cssInterop } from "nativewind";
 import colors from "../colors"
 import { TodoEntry, TodoList } from '../types';
 import { TextInput } from './TextInput';
 import { deleteTodoList, readTodoLists, writeTodoList } from 'utils/FileHandler';
 import { DeleteDialog } from './DeleteDialog';
+import { NestableDraggableFlatList, NestableScrollContainer, RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 
   [ListIcon, PaperTextInput].forEach(c => {
     cssInterop(c, {
@@ -34,6 +36,9 @@ export const Page = () => {
   const [deleteEntryDialogVisible, setDeleteEntryDialogVisible] = useState<boolean>(false)
   const [entryToBeDeleted, setEntryToBeDeleted] = useState<TodoEntry | undefined>()
 
+  const currentCheckedEntries = currentList?.entries.filter(e => e.state) ?? []
+  const currentUncheckedEntries = currentList?.entries.filter(e => !e.state) ?? []
+
   const reloadLists = () => {
     lists = readTodoLists() ?? []
     setCurrentList(lists.find(l => l.id === currentList?.id))
@@ -52,6 +57,16 @@ export const Page = () => {
       writeTodoList(currentList)
       reloadLists()
     }
+  }
+
+  const onEntryDragEnd = (data: TodoEntry[]) => {
+    if (currentList) {
+      const newCurrentList = { ...currentList }
+      newCurrentList.entries = data
+      setCurrentList(newCurrentList)
+      writeTodoList(currentList)
+    }
+    
   }
 
   const onSubmitNewListTextFieldEditing = () => {
@@ -80,9 +95,14 @@ export const Page = () => {
     }
   }
 
-  const onLongPressEntry = (entry: TodoEntry) => {
+  const handleDeleteDialog = (entry: TodoEntry) => {
     setEntryToBeDeleted(entry)
     setDeleteEntryDialogVisible(true)
+  }
+
+  const onPressList = (list: TodoList) => {
+    reloadLists()
+    setCurrentList(list)
   }
 
   const onLongPressList = (list: TodoList) => {
@@ -105,6 +125,37 @@ export const Page = () => {
     }
   }
 
+  const renderItem = ({item, drag, isActive}: RenderItemParams<TodoEntry>) => {
+    return (
+      <ScaleDecorator>
+        <View className='flex flex-row justify-between mx-6'>
+          <TouchableRipple
+            className='rounded-md flex-1'
+            rippleColor={colors['primary-transparent']}
+            borderless={true}
+            onPress={() => onPressEntry(item)}
+            onLongPress={drag}
+          >
+            <View className='h-20 flex flex-row justify-between items-center'>
+              <Text className='text-text'>{item.title}</Text>
+              <Checkbox
+                color={colors.primary}
+                status={item.state ? 'checked' : 'unchecked'}>
+              </Checkbox>
+            </View>
+          </TouchableRipple>
+          <TouchableHighlight
+            className='justify-center items-center'
+            onPress={() => {
+              handleDeleteDialog(item)
+            }}>
+            <TrashIcon height={30} color={colors.destructive}/>
+          </TouchableHighlight>
+        </View>
+      </ScaleDecorator>
+    )
+  }
+
   return (
 
     <>
@@ -115,10 +166,10 @@ export const Page = () => {
               .sort((a, b) => a.title.localeCompare(b.title))
               .map((list, index) => (
               <List.Item
-              className={`rounded-md ${list.id === currentList?.id ? 'bg-on-primary-transparent' : ''}`}
+                className={`rounded-md ${list.id === currentList?.id ? 'bg-on-primary-transparent' : ''}`}
                 title={<Text className='text-text rounded-full h-20'>{list.title}</Text>}
                 key={index}
-                onPress={() => setCurrentList(list)}
+                onPress={() => onPressList(list)}
                 onLongPress={() => onLongPressList(list)}
                 borderless={true}
                 rippleColor={colors['primary-transparent']}
@@ -144,34 +195,22 @@ export const Page = () => {
         </View>
         
 
-        <View className='flex-1 bg-surface rounded-md'>
-          <ScrollView>
-            {currentList?.entries
-              .sort((a, b) => Number(a.state) - Number(b.state))
-              .map((entry, index) => (
-              <TouchableRipple
-                className='rounded-md'
-                key={index}
-                rippleColor={colors['primary-transparent']}
-                borderless={true}
-                onPress={() => onPressEntry(entry)}
-                onLongPress={() => onLongPressEntry(entry)}
-                >
-                <View className='flex flex-row justify-between items-center mr-10'>
-                  <List.Item
-              className='rounded-md'
-                title={<Text className='text-text rounded-full h-20'>{entry.title}</Text>}
-                
-              />
-              <Checkbox
-                color={colors.primary}
-                status={entry.state ? 'checked' : 'unchecked'}
-                />
-                </View>
-              </TouchableRipple>
-            ))}
-          </ScrollView>
-        </View>
+        <NestableScrollContainer>
+          <View className='flex-1 bg-surface rounded-md'>
+            <NestableDraggableFlatList
+            data={currentUncheckedEntries}
+            onDragEnd={({ data }) => onEntryDragEnd([...data, ...currentCheckedEntries])}
+            keyExtractor={(entry) => String(entry.id)}
+            renderItem={renderItem}
+            />
+          <NestableDraggableFlatList
+            data={currentCheckedEntries}
+            onDragEnd={({ data }) => onEntryDragEnd([...currentUncheckedEntries, ...data])}
+            keyExtractor={(entry) => String(entry.id)}
+            renderItem={renderItem}
+            />
+          </View>
+        </NestableScrollContainer>
       </View>
       <Dialog
         visible={newListDialogVisible}
