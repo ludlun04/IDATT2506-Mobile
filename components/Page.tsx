@@ -128,29 +128,31 @@ export const Page = () => {
   const renderItem = ({item, drag, isActive}: RenderItemParams<TodoEntry>) => {
     return (
       <ScaleDecorator>
-        <View className='flex flex-row justify-between mx-6'>
-          <TouchableRipple
-            className='rounded-md flex-1'
-            rippleColor={colors['primary-transparent']}
-            borderless={true}
-            onPress={() => onPressEntry(item)}
-            onLongPress={drag}
-          >
-            <View className='h-20 flex flex-row justify-between items-center'>
-              <Text className='text-text'>{item.title}</Text>
-              <Checkbox
-                color={colors.primary}
-                status={item.state ? 'checked' : 'unchecked'}>
-              </Checkbox>
-            </View>
-          </TouchableRipple>
-          <TouchableHighlight
-            className='justify-center items-center'
-            onPress={() => {
-              handleDeleteDialog(item)
-            }}>
-            <TrashIcon height={30} color={colors.destructive}/>
-          </TouchableHighlight>
+        <View>
+          <View className='flex flex-row justify-between mx-6'>
+            <TouchableRipple
+              className='rounded-md flex-1'
+              rippleColor={colors['primary-transparent']}
+              borderless={true}
+              onPress={() => onPressEntry(item)}
+              onLongPress={drag}
+            >
+              <View className='h-20 flex flex-row justify-between items-center'>
+                <Text className='text-text'>{item.title}</Text>
+                <Checkbox
+                  color={colors.primary}
+                  status={item.state ? 'checked' : 'unchecked'}>
+                </Checkbox>
+              </View>
+            </TouchableRipple>
+            <TouchableHighlight
+              className='justify-center items-center'
+              onPress={() => {
+                handleDeleteDialog(item)
+              }}>
+              <TrashIcon height={30} color={colors.destructive}/>
+            </TouchableHighlight>
+          </View>
         </View>
       </ScaleDecorator>
     )
